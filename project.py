@@ -5,10 +5,15 @@ from ultralytics import YOLO
 model = YOLO("best(b1).pt")  # <-- path to uploaded model
 
 # Open the video
-cap = cv2.VideoCapture('videos/video 4.mp4')
-count_line_position = 600
+cap = cv2.VideoCapture('videos/video 5.mp4')
+count_line_position = 300
 offset = 6
 counter = 0
+
+# Dictionary to track vehicles that have been counted
+counted_vehicles = {}
+# Dictionary to track vehicles that are currently crossing the line
+crossing_vehicles = {}
 
 # drone
 #vehicle_classes = ['Auto-rickshaw', 'Bicycle', 'Bus', 'Car', 'Cycle-rickshaw', 'E-rickshaw', 'Motorcycle', 'Pedestrian', 'Tractor-trolley', 'Truck']
@@ -55,6 +60,9 @@ while True:
     # Draw the counting line
     cv2.line(frame, (25, count_line_position), (1200, count_line_position), (255, 127, 0), 3)
 
+    # Track current frame vehicles
+    current_vehicles = set()
+
     for det in detections:
         x1, y1, x2, y2, conf, cls_id = det
         class_name = model.names[int(cls_id)]
@@ -66,9 +74,24 @@ while True:
             cx = int((x1 + x2) / 2)
             cy = int((y1 + y2) / 2)
 
+            # Create a unique identifier for the vehicle based on its class and approximate position
+            # Using a grid-based approach to make the ID more stable
+            grid_x = cx // 50  # Divide the frame into 50-pixel wide grids
+            vehicle_id = f"{class_name}_{grid_x}"
+
             if is_crossing_line(cy, count_line_position, offset):
-                counter += 1
-                cv2.line(frame, (25, count_line_position), (1200, count_line_position), (0, 127, 255), 3)
+                if vehicle_id not in counted_vehicles and vehicle_id not in crossing_vehicles:
+                    # Vehicle is crossing the line for the first time
+                    counter += 1
+                    counted_vehicles[vehicle_id] = True
+                    crossing_vehicles[vehicle_id] = True
+                    cv2.line(frame, (25, count_line_position), (1200, count_line_position), (0, 127, 255), 3)
+            else:
+                # If vehicle is not crossing the line, remove it from crossing_vehicles
+                if vehicle_id in crossing_vehicles:
+                    del crossing_vehicles[vehicle_id]
+            
+            current_vehicles.add(vehicle_id)
 
             color = (0, 255, 0) if class_name == "car" else \
                     (255, 0, 0) if class_name == "motorcycle" else \
@@ -79,6 +102,9 @@ while True:
             cv2.putText(frame, class_name.upper(), (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
             cv2.circle(frame, (cx, cy), 4, (255, 0, 0), -1)
+
+    # Remove vehicles that are no longer in frame from counted_vehicles
+    counted_vehicles = {k: v for k, v in counted_vehicles.items() if k in current_vehicles}
 
     cv2.putText(frame, f"Vehicle Count: {counter}", (450, 70),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
