@@ -16,32 +16,13 @@ counted_vehicles = {}
 # Dictionary to track vehicles that are currently crossing the line
 crossing_vehicles = {}
 
-# drone
-#vehicle_classes = ['Auto-rickshaw', 'Bicycle', 'Bus', 'Car', 'Cycle-rickshaw', 'E-rickshaw', 'Motorcycle', 'Pedestrian', 'Tractor-trolley', 'Truck']
+# List of vehicle classes from training
+vehicle_classes = ['truck', 'auto rickshaw', 'bicycle', 'car', 'rickshaw',
+                   'motorbike', 'bus', 'pickup', 'taxi', 'suv']
 
+# Dictionary to store count of each vehicle type
+vehicle_type_counter = {vehicle: 0 for vehicle in vehicle_classes}
 
-# best model
-vehicle_classes = [ 'truck', 'auto rickshaw', 'bicycle', 'car', 'rickshaw', 'motorbike', 'bus', 'bicycle', "pickup", 'taxi', 'suv']  # Adjust as per your training data.yaml
-# - army vehicle
-# - auto rickshaw
-# - bicycle
-# - bus
-# - car
-# - garbagevan
-# - human hauler
-# - minibus
-# - minivan
-# - motorbike
-# - pickup
-# - policecar
-# - rickshaw
-# - scooter
-# - suv
-# - taxi
-# - three wheelers -CNG-
-# - truck
-# - van
-# - wheelbarrow
 def is_crossing_line(y, line_y, offset):
     return line_y - offset < y < line_y + offset
 
@@ -74,27 +55,24 @@ while True:
             cx = int((x1 + x2) / 2)
             cy = int((y1 + y2) / 2)
 
-            # Create a unique identifier for the vehicle based on its class and approximate position
-            # Using a grid-based approach to make the ID more stable
-            grid_x = cx // 50  # Divide the frame into 50-pixel wide grids
+            grid_x = cx // 50  # Stability in tracking
             vehicle_id = f"{class_name}_{grid_x}"
 
             if is_crossing_line(cy, count_line_position, offset):
                 if vehicle_id not in counted_vehicles and vehicle_id not in crossing_vehicles:
-                    # Vehicle is crossing the line for the first time
                     counter += 1
                     counted_vehicles[vehicle_id] = True
                     crossing_vehicles[vehicle_id] = True
+                    vehicle_type_counter[class_name] += 1  # Increment per vehicle type
                     cv2.line(frame, (25, count_line_position), (line_length, count_line_position), (0, 127, 255), 3)
             else:
-                # If vehicle is not crossing the line, remove it from crossing_vehicles
                 if vehicle_id in crossing_vehicles:
                     del crossing_vehicles[vehicle_id]
-            
+
             current_vehicles.add(vehicle_id)
 
             color = (0, 255, 0) if class_name == "car" else \
-                    (255, 0, 0) if class_name == "motorcycle" else \
+                    (255, 0, 0) if class_name == "motorbike" else \
                     (0, 0, 255) if class_name == "truck" else \
                     (0, 255, 255)  # default color for others
 
@@ -103,20 +81,26 @@ while True:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
             cv2.circle(frame, (cx, cy), 4, (255, 0, 0), -1)
 
-    # Remove vehicles that are no longer in frame from counted_vehicles
+    # Keep only vehicles currently in frame
     counted_vehicles = {k: v for k, v in counted_vehicles.items() if k in current_vehicles}
 
+    # Show total vehicle count
     cv2.putText(frame, f"Vehicle Count: {counter}", (450, 70),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
 
-    # Display playback speed info
+    # Show individual counts
+    y_offset = 110
+    for idx, (veh, count_val) in enumerate(vehicle_type_counter.items()):
+        cv2.putText(frame, f"{veh.title()}: {count_val}", (450, y_offset + idx*30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+
+    # Playback speed display
     cv2.putText(frame, f"Playback: Slow ({playback_delay}ms delay)", (20, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                
+
     cv2.imshow("Vehicle Detection", frame)
 
-    # Use the playback delay value instead of 1ms
-    if cv2.waitKey(playback_delay) & 0xFF == 13:
+    if cv2.waitKey(playback_delay) & 0xFF == 13:  # Press Enter to quit
         break
 
 cap.release()
