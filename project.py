@@ -5,12 +5,12 @@ from ultralytics import YOLO
 model = YOLO("best(b1).pt")  # <-- path to uploaded model
 
 # Open the video
-cap = cv2.VideoCapture('./videos/Video 4.mp4')
+cap = cv2.VideoCapture('videos/video 4.mp4')
 count_line_position = 600
 offset = 6
 counter = 0
 
-#drone
+# drone
 #vehicle_classes = ['Auto-rickshaw', 'Bicycle', 'Bus', 'Car', 'Cycle-rickshaw', 'E-rickshaw', 'Motorcycle', 'Pedestrian', 'Tractor-trolley', 'Truck']
 
 
@@ -39,6 +39,9 @@ vehicle_classes = [ 'truck', 'auto rickshaw', 'bicycle', 'car', 'rickshaw', 'mot
 # - wheelbarrow
 def is_crossing_line(y, line_y, offset):
     return line_y - offset < y < line_y + offset
+
+# Add playback speed control
+playback_delay = 50  # milliseconds between frames (higher = slower)
 
 while True:
     ret, frame = cap.read()
@@ -80,9 +83,14 @@ while True:
     cv2.putText(frame, f"Vehicle Count: {counter}", (450, 70),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
 
+    # Display playback speed info
+    cv2.putText(frame, f"Playback: Slow ({playback_delay}ms delay)", (20, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                
     cv2.imshow("Vehicle Detection", frame)
 
-    if cv2.waitKey(1) & 0xFF == 13:
+    # Use the playback delay value instead of 1ms
+    if cv2.waitKey(playback_delay) & 0xFF == 13:
         break
 
 cap.release()
