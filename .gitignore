@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,opencv
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,opencv
 
+
+#cusor 
+.cursor/
 # vscode
 .vscode/
 # videos folder
