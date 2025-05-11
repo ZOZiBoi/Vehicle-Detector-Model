@@ -5,8 +5,9 @@ from ultralytics import YOLO
 model = YOLO("best(b1).pt")  # <-- path to uploaded model
 
 # Open the video
-cap = cv2.VideoCapture('videos/video 5.mp4')
-count_line_position = 300
+cap = cv2.VideoCapture('videos/video 10.mp4')
+count_line_position = 950
+line_length = 1920  # Length of the counting line
 offset = 6
 counter = 0
 
@@ -58,7 +59,7 @@ while True:
     detections = results.boxes.data  # [x1, y1, x2, y2, confidence, class]
 
     # Draw the counting line
-    cv2.line(frame, (25, count_line_position), (1200, count_line_position), (255, 127, 0), 3)
+    cv2.line(frame, (25, count_line_position), (line_length, count_line_position), (255, 127, 0), 3)
 
     # Track current frame vehicles
     current_vehicles = set()
@@ -85,7 +86,7 @@ while True:
                     counter += 1
                     counted_vehicles[vehicle_id] = True
                     crossing_vehicles[vehicle_id] = True
-                    cv2.line(frame, (25, count_line_position), (1200, count_line_position), (0, 127, 255), 3)
+                    cv2.line(frame, (25, count_line_position), (line_length, count_line_position), (0, 127, 255), 3)
             else:
                 # If vehicle is not crossing the line, remove it from crossing_vehicles
                 if vehicle_id in crossing_vehicles:
