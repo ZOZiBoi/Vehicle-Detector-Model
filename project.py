@@ -7,7 +7,7 @@ model = YOLO("best(b1).pt")  # <-- path to uploaded model
 # Open the video
 cap = cv2.VideoCapture('videos/video 10.mp4')
 count_line_position = 950
-line_length = 1920  # Length of the counting line
+line_length = 1920  
 offset = 6
 counter = 0
 
@@ -22,7 +22,6 @@ crossing_vehicles = {}
 
 # best model
 vehicle_classes = [ 'truck', 'auto rickshaw', 'bicycle', 'car', 'rickshaw', 'motorbike', 'bus', 'bicycle', "pickup", 'taxi', 'suv']  # Adjust as per your training data.yaml
-# - ambulance
 # - army vehicle
 # - auto rickshaw
 # - bicycle
